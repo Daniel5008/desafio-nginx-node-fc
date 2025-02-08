@@ -1,0 +1,48 @@
+services:
+
+  app:
+    build:
+      context: ./node
+    container_name: app
+    networks:
+      - node-network
+    volumes:
+      - ./node:/usr/src/app
+    tty: true
+    depends_on:
+      db:
+        condition: service_healthy
+
+  nginx:
+    build:
+        context: ./nginx
+        dockerfile: Dockerfile
+    container_name: nginx
+    networks:
+      - node-network
+    ports:
+      - "8080:80"
+    depends_on:
+      - app
+
+  db:
+    image: mysql:latest
+    command: --innodb-use-native-aio=0
+    container_name: db
+    restart: always
+    volumes:
+      - ./mysql:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=nodedb
+      - MYSQL_ROOT_PASSWORD=root
+    networks:
+     - node-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+
+networks:
+  node-network:
+    driver: bridge
