@@ -33,16 +33,18 @@ services:
     restart: always
     volumes:
       - ./mysql:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     environment:
       - MYSQL_DATABASE=nodedb
       - MYSQL_ROOT_PASSWORD=root
     networks:
      - node-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: >
+        mysql -uroot -proot -e "USE nodedb; SELECT COUNT(*) FROM people;"  
       interval: 5s
-      timeout: 10s
-      retries: 10
+      timeout: 15s
+      retries: 15
 
 networks:
   node-network:
